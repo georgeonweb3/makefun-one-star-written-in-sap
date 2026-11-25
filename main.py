@@ -1,13 +1,9 @@
 #!/usr/bin/env python3
-"""One Star, Written in Sap — make.fun entry.
+"""One Star, Written in Sap.
 
-Writes a single one-line 1-star review, in the voice of a houseplant
-reviewing its human owner, to /output/entry.txt.
-
-The line is fixed text: it was chosen by a blind pairwise tournament
-(6 candidates, 15 pairs) run against the competition's published judge
-brief, and confirmed in a both-orders A/B re-check against the runner-up.
-Deterministic: the same bytes on every run. Stdlib only, no network.
+Writes a one-line, one-star review by a houseplant about its human
+owner to /output/entry.txt. Stdlib only, deterministic: the same
+text is written on every run.
 """
 
 import os
@@ -19,18 +15,26 @@ ENTRY = (
 )
 
 OUTPUT_PATH = "/output/entry.txt"
+MIN_CHARS = 1
+MAX_CHARS = 279
 
 
 def main() -> None:
     text = ENTRY
-    # Gate guard: the sealed scorer needs UTF-8 text of 1-279 chars,
-    # not only whitespace, on a single line with no trailing newline.
-    assert "\n" not in text, "entry must be a single line"
-    assert text == text.strip(), "entry must not start/end with whitespace"
-    assert 1 <= len(text) <= 279, f"entry is {len(text)} chars, gate is 1-279"
+    if not (MIN_CHARS <= len(text) <= MAX_CHARS):
+        raise ValueError(
+            f"entry must be {MIN_CHARS}-{MAX_CHARS} chars, got {len(text)}"
+        )
+    if "\n" in text or "\r" in text:
+        raise ValueError("entry must be a single line")
+    if not text.strip():
+        raise ValueError("entry must not be only whitespace")
+    if text != text.strip():
+        raise ValueError("entry must not have leading/trailing whitespace")
     os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
     with open(OUTPUT_PATH, "w", encoding="utf-8", newline="") as f:
         f.write(text)
+    print(f"wrote {len(text)} chars to {OUTPUT_PATH}")
 
 
 if __name__ == "__main__":
